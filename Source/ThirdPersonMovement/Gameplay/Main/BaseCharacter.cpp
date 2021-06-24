@@ -1,33 +1,60 @@
-
-
 #include "BaseCharacter.h"
 
-// Sets default values
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
 ABaseCharacter::ABaseCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	CameraBoom = UObject::CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(GetRootComponent());
+	Camera = UObject::CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(CameraBoom);
 }
 
-// Called when the game starts or when spawned
+
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
-// Called every frame
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-// Called to bind functionality to input
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	PlayerInputComponent->BindAxis("MouseX", this, &ABaseCharacter::MouseXHandle);
+	PlayerInputComponent->BindAxis("MouseY", this, &ABaseCharacter::MouseYHandle);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForwardHandle);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRightHandle);
 }
 
+void ABaseCharacter::MouseXHandle(float value)
+{
+	AddControllerYawInput(value);
+}
+
+void ABaseCharacter::MouseYHandle(float value)
+{
+	AddControllerPitchInput(value);
+}
+
+void ABaseCharacter::MoveForwardHandle(float value)
+{
+	AddMovementInput(UKismetMathLibrary::GetForwardVector
+		(FRotator(0,
+		          GetControlRotation().Yaw,
+		          0)),value);
+}
+
+void ABaseCharacter::MoveRightHandle(float value)
+{
+	AddMovementInput(UKismetMathLibrary::GetRightVector
+		(FRotator(0,
+		          GetControlRotation().Yaw,
+		          0)), value);
+}
